@@ -365,7 +365,7 @@ def print_grid(grid, rows, cols):
     print(bottom_line)
 
 def save_grid(grid, rows, cols, size):
-    """Save the current grid to a file"""
+    """Save solution to file"""
     filename = input("\nEnter filename to save (or press Enter to skip): ").strip()
     if filename:
         filename += ".txt"
@@ -374,18 +374,96 @@ def save_grid(grid, rows, cols, size):
     
     try:
         with open(filename, 'w') as file:
-            file.write(f"{size}\n")
+            def file_print(*args, end='\n', sep=' '):
+                file.write(sep.join(map(str, args)) + end)
+            
+            file_print("--- INPUT ---")
+            file_print(f"{size}")
             
             for row in rows:
-                file.write(' '.join(map(str, row)) + '\n')
+                file_print(' '.join(map(str, row)))
             
             for col in cols:
-                file.write(' '.join(map(str, col)) + '\n')
+                file_print(' '.join(map(str, col)))
             
             if grid:
-                file.write("--- SOLUTION ---\n")
+                file_print("\n--- SOLUTION ---")
+
+                max_row_clues = max(len(row) for row in rows)
+                max_col_clues = max(len(col) for col in cols)
+                cell_width = 3
+                
+                # Column clues
+                for i in range(max_col_clues):
+                    file_print(' ' * (max_row_clues * cell_width + 1), end='')
+                    
+                    for j in range(size):
+                        if i >= max_col_clues - len(cols[j]):
+                            clue_index = i - (max_col_clues - len(cols[j]))
+                            file_print(f"{cols[j][clue_index]:^{cell_width}}", end='')
+                        else:
+                            file_print(' ' * cell_width, end='')
+                            
+                        # Vertical divider after every 5th column
+                        if (j + 1) % 5 == 0 and j < size - 1:
+                            file_print(' ', end='')
+                    file_print()
+                
+                # Horizontal divider
+                separator_line = '─' * cell_width
+                top_line = ' ' * (max_row_clues * cell_width) + '┌'
+                for j in range(size):
+                    top_line += separator_line
+                    if (j + 1) % 5 == 0 and j < size - 1:
+                        top_line += '┬'
+                    elif j == size - 1:
+                        top_line += '┐'
+                file_print(top_line)
+                
+                # Row clues and grid
+                for i, row in enumerate(grid):
+                    for j in range(max_row_clues):
+                        if j >= max_row_clues - len(rows[i]):
+                            clue_index = j - (max_row_clues - len(rows[i]))
+                            file_print(f"{rows[i][clue_index]:>{cell_width}}", end='')
+                        else:
+                            file_print(' ' * cell_width, end='')
+                    
+                    file_print('│', end='')
+                    
+                    for j, cell in enumerate(row):
+                        file_print(f"{cell:^{cell_width}}", end='')
+                        # Vertical divider every 5th column
+                        if (j + 1) % 5 == 0 and j < size - 1:
+                            file_print('│', end='')
+                        elif j == size - 1:
+                            file_print('│', end='')
+                    file_print()
+                    
+                    # Horizontal divider every 5th row
+                    if (i + 1) % 5 == 0 and i < size - 1:
+                        divider_line = ' ' * (max_row_clues * cell_width) + '├'
+                        for j in range(size):
+                            divider_line += '─' * cell_width
+                            if (j + 1) % 5 == 0 and j < size - 1:
+                                divider_line += '┼'
+                            elif j == size - 1:
+                                divider_line += '┤'
+                        file_print(divider_line)
+                
+                # Bottom horizontal line
+                bottom_line = ' ' * (max_row_clues * cell_width) + '└'
+                for j in range(size):
+                    bottom_line += '─' * cell_width
+                    if (j + 1) % 5 == 0 and j < size - 1:
+                        bottom_line += '┴'
+                    elif j == size - 1:
+                        bottom_line += '┘'
+                file_print(bottom_line)
+                
+                file_print("\n--- BINARY REPRESENTATION ---")
                 for row in grid:
-                    file.write(''.join('1' if cell == '■' else '0' for cell in row) + '\n')
+                    file_print(''.join('1' if cell == '■' else '0' for cell in row))
         
         print(f"Grid saved to {filename}")
     except Exception as e:
@@ -402,7 +480,6 @@ def main():
     if solved_grid:
         print("\nSolution found!\n")
         print_grid(solved_grid, rows, cols)
-        
         save_grid(solved_grid, rows, cols, size)
     else:
         print("\nNo solution found. The puzzle might be invalid or too complex.")
